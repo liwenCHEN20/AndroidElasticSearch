@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -30,7 +31,7 @@ public class ESMovieManager implements IMovieManager {
 	private static final String SEARCH_URL = "http://cmput301.softwareprocess.es:8080/testing/movie/_search";
 	private static final String RESOURCE_URL = "http://cmput301.softwareprocess.es:8080/testing/movie/";
 	private static final String TAG = "MovieSearch";
-
+	
 	private Gson gson;
 
 	public ESMovieManager() {
@@ -67,9 +68,49 @@ public class ESMovieManager implements IMovieManager {
 	 */
 	public List<Movie> searchMovies(String searchString, String field) {
 		List<Movie> result = new ArrayList<Movie>();
-
+		if (searchString == null || "".equals(searchString)){
+			searchString = "*";
+		}
+		HttpClient httpClient = new DefaultHttpClient();
+		try
+		{
+			HttpPost searchRequest = createSearchRequest(searchString, field);
+			HttpResponse response = httpClient.execute(searchRequest);
+			
+			String status =response.getStatusLine().toString();
+			Log.i(TAG, status);
+			
+			SearchResponse<Movie> esResponse = parseSearchResponse(response);
+			Hits<Movie> hits = esResponse.getHits();
+			
+			if (hits != null){
+				if (hits.getHits() != null){
+					for (SearchHit<Movie> sear : hits.getHits()){
+						result.add(sear.getSource());
+					}
+				}
+			}
+			
+			
+			
+			
+			
+		} catch (UnsupportedEncodingException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		// TODO: Implement search movies using ElasticSearch
-		
+		catch (ClientProtocolException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		return result;
 	}
 

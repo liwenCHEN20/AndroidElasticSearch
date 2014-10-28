@@ -25,7 +25,6 @@ public class MainActivity extends Activity {
 	private ListView movieList;
 	private List<Movie> movies;
 	private ArrayAdapter<Movie> moviesViewAdapter;
-
 	private IMovieManager movieManager;
 
 	private Context mContext = this;
@@ -41,7 +40,6 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
 		movieList = (ListView) findViewById(R.id.movieList);
 	}
 
@@ -53,7 +51,6 @@ public class MainActivity extends Activity {
 		moviesViewAdapter = new ArrayAdapter<Movie>(this, R.layout.list_item,movies);
 		movieList.setAdapter(moviesViewAdapter);
 		movieManager = new ESMovieManager();
-
 		// Show details when click on a movie
 		movieList.setOnItemClickListener(new OnItemClickListener() {
 
@@ -72,14 +69,16 @@ public class MainActivity extends Activity {
 			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 				Movie movie = movies.get(position);
 				Toast.makeText(mContext, "Deleting " + movie.getTitle(), Toast.LENGTH_LONG).show();
-
 				Thread thread = new DeleteThread(movie.getId());
 				thread.start();
-
 				return true;
 			}
 		});
+		
+		
+		
 	}
+	
 
 	@Override
 	protected void onResume() {
@@ -87,6 +86,10 @@ public class MainActivity extends Activity {
 
 		// Refresh the list when visible
 		// TODO: Search all
+		movies.clear();
+		Thread thread = new SearchThread("");
+		thread.start();
+		
 		
 	}
 
@@ -96,11 +99,13 @@ public class MainActivity extends Activity {
 	 */
 	public void search(View view) {
 		movies.clear();
-
 		// TODO: Extract search query from text view
+		EditText text = (EditText) findViewById(R.id.editText1);
+		String searchString = text.getText().toString();
 		
 		// TODO: Run the search thread
-		
+		Thread thread = new SearchThread(searchString);
+		thread.start();
 	}
 	
 	/**
@@ -126,8 +131,18 @@ public class MainActivity extends Activity {
 
 	class SearchThread extends Thread {
 		// TODO: Implement search thread
-		
-	}
+		private String search;
+		public SearchThread (String s){
+			search = s;
+		}
+		@Override
+		public void run(){
+			movies.clear();
+			movies.addAll(movieManager.searchMovies(search, null));
+			
+			runOnUiThread(doUpdateGUIList);
+			}
+		}
 
 	
 	class DeleteThread extends Thread {
@@ -153,5 +168,5 @@ public class MainActivity extends Activity {
 
 			runOnUiThread(doUpdateGUIList);
 		}
-	}
+	}	
 }
